@@ -1,0 +1,13 @@
+---
+description: rules to use when editing creating code for the backend , in /api folder
+globs: 
+alwaysApply: false
+---
+# Backend Rules
+
+- Use Python with FastAPI for the backend API.
+- Use Pydantic for schema validation and serialization.
+- Write tests for each API route (endpoint).
+- Use SQLite as the database.
+- Use SQLModel as ORM
+- Enforce business rules, such as: a user cannot create more than 5 high priority tasks.

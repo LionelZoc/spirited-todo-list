@@ -1,0 +1,14 @@
+---
+description: rules used when editing or creating code for the front end in /web folder
+globs: 
+alwaysApply: false
+---
+# Frontend Rules
+
+- Use React with TypeScript for all components.
+- Keep most types in a `types.ts` file and ensure all components are correctly typed.
+- Use `react-table` for listing and table features.
+- Use Tailwind CSS for styling.
+- Use `react-query` for data fetching and caching.
+- Favor testable custom hooks for handling fetching logic.
+- Write components to be easily testable (e.g., avoid tightly coupling logic and UI, use dependency injection where possible).
