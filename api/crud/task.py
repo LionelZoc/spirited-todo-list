@@ -2,8 +2,9 @@
 
 import os
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
 
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from models.task import Priority, Task
@@ -23,8 +24,11 @@ def get_tasks(
     offset: int = 0,
     sort_by: str = "priority",
     sort_order: str = "desc",
-) -> List[Task]:
-    """Retrieve all tasks with pagination and sorting."""
+) -> tuple[list[Task], int]:
+    """Retrieve all tasks with pagination and sorting, and return items and total count.
+    The total count is calculated with a separate query to provide the total number of tasks in the database (for pagination),
+    not just the number of items in the current page (which would be len(items)).
+    """
     valid_sort_fields = {
         "priority": Task.priority,
         "created_at": Task.created_at,
@@ -35,8 +39,12 @@ def get_tasks(
     order_col = valid_sort_fields.get(sort_by, Task.priority)
     if sort_order == "desc":
         order_col = order_col.desc()
+    total = session.exec(
+        select(func.count()).select_from(Task)  # pylint: disable=not-callable
+    ).one()  # pylint: disable=not-callable
     query = select(Task).order_by(order_col).offset(offset).limit(limit)
-    return session.exec(query).all()
+    items = session.exec(query).all()
+    return items, total
 
 
 def create_task(session: Session, task_in: TaskCreate) -> Task:

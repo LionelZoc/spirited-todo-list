@@ -196,7 +196,7 @@ def test_task_pagination_and_sorting():
     """Test pagination and sorting of tasks."""
     # Clean up all tasks first
     response = client.get("/tasks/")
-    for task in response.json():
+    for task in response.json()["items"]:
         client.delete(f"/tasks/{task['id']}")
     # Create 5 tasks with different priorities and titles
     titles = ["A", "B", "C", "D", "E"]
@@ -207,22 +207,24 @@ def test_task_pagination_and_sorting():
     response = client.get("/tasks/?limit=2")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 2
+    assert len(data["items"]) == 2
+    assert "total" in data and data["total"] == 5
+    assert "page" in data and data["page"] == 1
+    assert "page_size" in data and data["page_size"] == 2
     # Test offset
     response = client.get("/tasks/?limit=2&offset=2")
     assert response.status_code == 200
     data2 = response.json()
-    assert len(data2) == 2
+    assert len(data2["items"]) == 2
     # Test sort_by title desc
     response = client.get("/tasks/?sort_by=title&sort_order=desc")
     assert response.status_code == 200
-    titles_desc = [task["title"] for task in response.json()]
+    titles_desc = [task["title"] for task in response.json()["items"]]
     assert titles_desc[:5] == sorted(titles, reverse=True)
     # Test sort_by priority asc
     response = client.get("/tasks/?sort_by=priority&sort_order=asc")
     assert response.status_code == 200
-    tasks_asc = response.json()
-    print("DEBUG tasks_asc:", [(t["id"], t["title"], t["priority"]) for t in tasks_asc])
+    tasks_asc = response.json()["items"]
     priorities_asc = [task["priority"] for task in tasks_asc]
     assert priorities_asc[:5] == [
         Priority.LOW.value,
@@ -234,28 +236,28 @@ def test_task_pagination_and_sorting():
     # Test offset bigger than number of tasks
     response = client.get("/tasks/?offset=10")
     assert response.status_code == 200
-    assert len(response.json()) == 0
+    assert len(response.json()["items"]) == 0
     # Test limit bigger than number of tasks
     response = client.get("/tasks/?limit=10")
     assert response.status_code == 200
-    assert len(response.json()) == 5
+    assert len(response.json()["items"]) == 5
     # Test sort_by invalid field
     response = client.get("/tasks/?sort_by=invalid&sort_order=asc")
     assert response.status_code == 200
-    assert len(response.json()) == 5
+    assert len(response.json()["items"]) == 5
     # Test sort_order invalid value
     response = client.get("/tasks/?sort_by=priority&sort_order=invalid")
     assert response.status_code == 200
-    assert len(response.json()) == 5
+    assert len(response.json()["items"]) == 5
     # Test to make sure the default sort_by is priority by desc order
     response = client.get("/tasks/")
     assert response.status_code == 200
-    assert len(response.json()) == 5
-    assert response.json()[0]["priority"] == Priority.HIGH.value
-    assert response.json()[1]["priority"] == Priority.MID.value
-    assert response.json()[2]["priority"] == Priority.MID.value
-    assert response.json()[3]["priority"] == Priority.LOW.value
-    assert response.json()[4]["priority"] == Priority.LOW.value
+    assert len(response.json()["items"]) == 5
+    assert response.json()["items"][0]["priority"] == Priority.HIGH.value
+    assert response.json()["items"][1]["priority"] == Priority.MID.value
+    assert response.json()["items"][2]["priority"] == Priority.MID.value
+    assert response.json()["items"][3]["priority"] == Priority.LOW.value
+    assert response.json()["items"][4]["priority"] == Priority.LOW.value
 
 
 def test_create_task_priority_out_of_range_and_type():
@@ -274,7 +276,7 @@ def test_update_task_to_high_priority_at_limit():
     """Test updating a task to high priority when already at the high-priority limit."""
     # Clean up all tasks first
     response = client.get("/tasks/")
-    for task in response.json():
+    for task in response.json()["items"]:
         client.delete(f"/tasks/{task['id']}")
     max_high = int(os.getenv("MAX_HIGH_PRIORITY_TASK", "5"))
     # Create max_high high-priority tasks
@@ -299,7 +301,7 @@ def test_delete_high_priority_and_create_new():
     """Test deleting a high-priority task and then creating a new one (should succeed)."""
     # Clean up all tasks first
     response = client.get("/tasks/")
-    for task in response.json():
+    for task in response.json()["items"]:
         client.delete(f"/tasks/{task['id']}")
     max_high = int(os.getenv("MAX_HIGH_PRIORITY_TASK", "5"))
     ids = []

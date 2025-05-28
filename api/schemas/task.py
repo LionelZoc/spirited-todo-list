@@ -1,7 +1,7 @@
 """Schemas for Task model in the Spirited Todo List API."""
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -34,3 +34,12 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     priority: Optional[Priority] = None
+
+
+class TaskListResponse(BaseModel):
+    """Schema for listing tasks."""
+
+    items: List[TaskRead]
+    total: int
+    page: int
+    page_size: int
