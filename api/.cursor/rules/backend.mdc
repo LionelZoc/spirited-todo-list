@@ -16,6 +16,8 @@ alwaysApply: false
   - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
   - Favor named exports for routes and utility functions.
   - Use the Receive an Object, Return an Object (RORO) pattern.
+  - Add a simple, clear docstring to every function and module
+  - respect pylint best practices
   
   Python/FastAPI
   - Use def for pure functions and async def for asynchronous operations.
