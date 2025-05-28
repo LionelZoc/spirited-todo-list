@@ -1,5 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 # Lint, format, and sort imports in backend (Python)
 echo "Linting, formatting, and sorting imports in backend (Python)..."
@@ -11,4 +10,4 @@ make test-api
 
 # Lint frontend (JS/TS)
 echo "Linting frontend (JS/TS)..."
-make lint-web
+make lint-web 
