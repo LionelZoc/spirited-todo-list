@@ -1,12 +1,15 @@
 """CRUD operations for Task model in the Spirited Todo List API."""
 
+import os
 from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlmodel import Session, select
 
-from models.task import Task
+from models.task import Priority, Task
 from schemas.task import TaskCreate, TaskUpdate
+
+MAX_HIGH_PRIORITY_TASK = int(os.getenv("MAX_HIGH_PRIORITY_TASK", "5"))
 
 
 def get_task(session: Session, task_id: int) -> Optional[Task]:
@@ -14,13 +17,38 @@ def get_task(session: Session, task_id: int) -> Optional[Task]:
     return session.get(Task, task_id)
 
 
-def get_tasks(session: Session) -> List[Task]:
-    """Retrieve all tasks."""
-    return session.exec(select(Task)).all()
+def get_tasks(
+    session: Session,
+    limit: int = 20,
+    offset: int = 0,
+    sort_by: str = "priority",
+    sort_order: str = "desc",
+) -> List[Task]:
+    """Retrieve all tasks with pagination and sorting."""
+    valid_sort_fields = {
+        "priority": Task.priority,
+        "created_at": Task.created_at,
+        "updated_at": Task.updated_at,
+        "title": Task.title,
+        "id": Task.id,
+    }
+    order_col = valid_sort_fields.get(sort_by, Task.priority)
+    if sort_order == "desc":
+        order_col = order_col.desc()
+    query = select(Task).order_by(order_col).offset(offset).limit(limit)
+    return session.exec(query).all()
 
 
 def create_task(session: Session, task_in: TaskCreate) -> Task:
-    """Create a new task from TaskCreate schema."""
+    """Create a new task from TaskCreate schema, enforcing high priority limit."""
+    if task_in.priority == Priority.HIGH:
+        high_count = len(
+            session.exec(select(Task).where(Task.priority == Priority.HIGH)).all()
+        )
+        if high_count >= MAX_HIGH_PRIORITY_TASK:
+            raise ValueError(
+                f"Cannot create more than {MAX_HIGH_PRIORITY_TASK} high priority tasks."
+            )
     task = Task(**task_in.model_dump())
     session.add(task)
     session.commit()
@@ -29,11 +57,22 @@ def create_task(session: Session, task_in: TaskCreate) -> Task:
 
 
 def update_task(session: Session, task_id: int, task_in: TaskUpdate) -> Optional[Task]:
-    """Update an existing task by ID with TaskUpdate schema."""
+    """Update an existing task by ID with TaskUpdate schema, enforcing high priority limit."""
     task = session.get(Task, task_id)
     if not task:
         return None
-    for field, value in task_in.model_dump(exclude_unset=True).items():
+    update_data = task_in.model_dump(exclude_unset=True)
+    # Check if updating to high priority
+    new_priority = update_data.get("priority", task.priority)
+    if new_priority == Priority.HIGH and task.priority != Priority.HIGH:
+        high_count = len(
+            session.exec(select(Task).where(Task.priority == Priority.HIGH)).all()
+        )
+        if high_count >= MAX_HIGH_PRIORITY_TASK:
+            raise ValueError(
+                f"Cannot create more than {MAX_HIGH_PRIORITY_TASK} high priority tasks."
+            )
+    for field, value in update_data.items():
         setattr(task, field, value)
     task.updated_at = datetime.now(timezone.utc)
     session.add(task)

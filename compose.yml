@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:////app/data/todo.db
+      - MAX_HIGH_PRIORITY_TASK=5
     depends_on:
       - web
   web:
