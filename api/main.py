@@ -1,10 +1,14 @@
+"""Main entrypoint for the Spirited Todo List FastAPI application."""
+
+import logging
+import os
+from contextlib import asynccontextmanager
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
-import os
+
 from routers.task import router as task_router
-from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-import logging
 
 load_dotenv()
 
@@ -15,15 +19,20 @@ logger = logging.getLogger(__name__)
 
 engine = create_engine(DATABASE_URL, echo=True)
 
+
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_):
+    """Create database tables at application startup."""
     SQLModel.metadata.create_all(engine)
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(task_router)
 
+
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Spirited Todo List API!"} 
+    """Root endpoint for API health check."""
+    return {"message": "Welcome to the Spirited Todo List API!"}

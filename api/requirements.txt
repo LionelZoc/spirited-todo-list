@@ -4,4 +4,7 @@ sqlmodel
 pydantic
 pytest
 httpx
-python-dotenv 
+python-dotenv
+pylint
+black
+isort 
