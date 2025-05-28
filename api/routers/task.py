@@ -3,10 +3,11 @@
 import os
 from typing import List
 
-from crud.task import create_task, delete_task, get_task, get_tasks, update_task
 from fastapi import APIRouter, Depends, HTTPException, status
-from schemas.task import TaskCreate, TaskRead, TaskUpdate
 from sqlmodel import Session, create_engine
+
+from crud.task import create_task, delete_task, get_task, get_tasks, update_task
+from schemas.task import TaskCreate, TaskRead, TaskUpdate
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/todo.db")
 engine = create_engine(DATABASE_URL, echo=True)
