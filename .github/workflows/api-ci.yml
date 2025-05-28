@@ -16,10 +16,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build all Docker images
-        run: docker-compose build
-      - name: Lint API (pylint)
-        run: make lint-api
-      - name: Check API formatting (black)
-        run: make lint-api-format
+        run: docker compose build
+      - name: Lint, format, and sort imports in API (isort, black, pylint)
+        run: make lint-api-all
       - name: Run API tests
         run: make test-api 
