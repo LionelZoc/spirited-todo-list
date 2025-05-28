@@ -22,13 +22,17 @@ def get_tasks(
     limit: int = 20,
     offset: int = 0,
     sort_by: str = "priority",
-    sort_order: str = "asc",
+    sort_order: str = "desc",
 ) -> List[Task]:
     """Retrieve all tasks with pagination and sorting."""
-    valid_sort_fields = {"priority", "created_at", "updated_at", "title", "id"}
-    if sort_by not in valid_sort_fields:
-        sort_by = "priority"
-    order_col = getattr(Task, sort_by)
+    valid_sort_fields = {
+        "priority": Task.priority,
+        "created_at": Task.created_at,
+        "updated_at": Task.updated_at,
+        "title": Task.title,
+        "id": Task.id,
+    }
+    order_col = valid_sort_fields.get(sort_by, Task.priority)
     if sort_order == "desc":
         order_col = order_col.desc()
     query = select(Task).order_by(order_col).offset(offset).limit(limit)
@@ -37,9 +41,9 @@ def get_tasks(
 
 def create_task(session: Session, task_in: TaskCreate) -> Task:
     """Create a new task from TaskCreate schema, enforcing high priority limit."""
-    if task_in.priority == Priority.high:
+    if task_in.priority == Priority.HIGH:
         high_count = len(
-            session.exec(select(Task).where(Task.priority == Priority.high)).all()
+            session.exec(select(Task).where(Task.priority == Priority.HIGH)).all()
         )
         if high_count >= MAX_HIGH_PRIORITY_TASK:
             raise ValueError(
@@ -53,11 +57,22 @@ def create_task(session: Session, task_in: TaskCreate) -> Task:
 
 
 def update_task(session: Session, task_id: int, task_in: TaskUpdate) -> Optional[Task]:
-    """Update an existing task by ID with TaskUpdate schema."""
+    """Update an existing task by ID with TaskUpdate schema, enforcing high priority limit."""
     task = session.get(Task, task_id)
     if not task:
         return None
-    for field, value in task_in.model_dump(exclude_unset=True).items():
+    update_data = task_in.model_dump(exclude_unset=True)
+    # Check if updating to high priority
+    new_priority = update_data.get("priority", task.priority)
+    if new_priority == Priority.HIGH and task.priority != Priority.HIGH:
+        high_count = len(
+            session.exec(select(Task).where(Task.priority == Priority.HIGH)).all()
+        )
+        if high_count >= MAX_HIGH_PRIORITY_TASK:
+            raise ValueError(
+                f"Cannot create more than {MAX_HIGH_PRIORITY_TASK} high priority tasks."
+            )
+    for field, value in update_data.items():
         setattr(task, field, value)
     task.updated_at = datetime.now(timezone.utc)
     session.add(task)

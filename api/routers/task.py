@@ -26,7 +26,7 @@ def list_tasks(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     sort_by: str = Query("priority"),
-    sort_order: str = Query("asc"),
+    sort_order: str = Query("desc"),
     session: Session = Depends(get_session),
 ):
     """List all tasks with pagination and sorting."""
@@ -58,10 +58,13 @@ def update_existing_task(
     task_id: int, task_in: TaskUpdate, session: Session = Depends(get_session)
 ):
     """Update a task by ID."""
-    task = update_task(session, task_id, task_in)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+    try:
+        task = update_task(session, task_id, task_in)
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        return task
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

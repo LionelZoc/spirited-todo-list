@@ -13,7 +13,7 @@ class TaskBase(BaseModel):
 
     title: str = Field(..., min_length=1)
     description: Optional[str] = None
-    priority: Priority = Priority.low
+    priority: Priority = Priority.LOW
 
 
 class TaskCreate(TaskBase):
