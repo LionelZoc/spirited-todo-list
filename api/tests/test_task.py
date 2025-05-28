@@ -5,10 +5,39 @@ import re
 import sys
 
 from fastapi.testclient import TestClient
+from sqlmodel import Session, SQLModel, create_engine
 
 from main import app
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+# Create a single in-memory SQLite connection for all sessions
+TEST_DATABASE_URL = "sqlite://"
+test_engine = create_engine(
+    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+connection = test_engine.connect()
+SQLModel.metadata.create_all(connection)
+
+
+def get_test_session():
+    """Get a test session for the database using the shared connection."""
+    with Session(bind=connection) as session:
+        yield session
+
+
+# Patch the app's dependency to use the test session
+def patch_app_session():
+    """Patch the app's dependency to use the test session."""
+    for route in app.routes:
+        if hasattr(route, "dependant"):
+            for dep in route.dependant.dependencies:
+                if getattr(dep.call, "__name__", None) == "get_session":
+                    dep.call = get_test_session
+
+
+patch_app_session()
+
 client = TestClient(app)
 
 
