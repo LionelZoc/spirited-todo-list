@@ -2,4 +2,6 @@ fastapi
 uvicorn
 sqlmodel
 pydantic
-pytest 
+pytest
+httpx
+python-dotenv 
