@@ -8,12 +8,16 @@ from sqlmodel import Field, SQLModel
 
 
 class Priority(str, Enum):
+    """Priority levels for tasks."""
+
     low = "low"
     mid = "mid"
     high = "high"
 
 
 class Task(SQLModel, table=True):
+    """Task model."""
+
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str
     description: Optional[str] = None
