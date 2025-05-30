@@ -1,0 +1,36 @@
+services:
+  api:
+    build: ./api
+    container_name: spirited-todo-api
+    volumes:
+      - ./api:/app
+      - ./api/data:/app/data
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/todo.db
+      - MAX_HIGH_PRIORITY_TASK=5
+    networks:
+      - spirited-todo-list
+  web:
+    build: ./web
+    container_name: spirited-todo-web
+    volumes:
+      - ./web:/app
+      - ./web/node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+      - INTERNAL_API_URL=http://api:8000
+    depends_on:
+      - api
+    networks:
+      - spirited-todo-list
+
+volumes:
+  todo_sqlite_data: 
+
+networks:
+  spirited-todo-list:
+    driver: bridge

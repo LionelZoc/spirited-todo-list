@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Lint, format, and sort imports in backend (Python)
+echo "Linting, formatting, and sorting imports in backend (Python)..."
+make lint-api-all
+
+# Test backend (Python)
+echo "Running backend (Python) tests..."
+make test-api
+
+# Lint frontend (JS/TS)
+echo "Linting frontend (JS/TS)..."
+make lint-web
+
+echo "Running frontend (JS/TS) tests..."
+make test-web

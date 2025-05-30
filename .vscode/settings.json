@@ -1,0 +1,24 @@
+{
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length=88"],
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylintArgs": [
+    "--disable=R,C,W1203,E0401"
+  ],
+  "python.sortImports.args": ["--profile", "black"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "isort.args": ["--profile", "black"],
+  "python.envFile": "${workspaceFolder}/api/.env",
+  "python.analysis.extraPaths": [
+    "api"
+    ],
+  "eslint.workingDirectories": [
+    "web"
+  ],
+  "eslint.nodePath": "web/node_modules",
+  "eslint.format.enable": true
+}
