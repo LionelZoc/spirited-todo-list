@@ -2,6 +2,9 @@
 
 A full stack, dockerized todo list application with a FastAPI backend and a Next.js (TypeScript) frontend.
 
+![Screenshot of Spirited Todo List](.doc/screenshot1.jpg)
+![Screenshot 2 of Spirited Todo List](.doc/screenshot2.png)
+
 ## Project Structure
 
 - `api/` - FastAPI backend (Python, Pydantic, SQLModel, SQLite)
