@@ -73,6 +73,11 @@ AI accelerated my learning and productivity, but the overall design, structure, 
 ## Development
 - See `api/README.md` and `web/README.md` for service-specific instructions. 
 
+
+## The Refactored component
+
+it's in `web/src/uikit/RefactoredForm.tsx`
+
 ## some choices
 
 Why did i choose nextjs: it's all about starting small but thinking big.
