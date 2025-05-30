@@ -5,7 +5,7 @@ on:
     paths:
       - 'api/**'
       - 'web/**'
-      - 'docker-compose.yml'
+      - 'compose.yml'
       - 'Makefile'
 
 jobs:
