@@ -1,4 +1,0 @@
-services:
-  web:
-    volumes:
-      - ./web/node_modules:/app/node_modules 
