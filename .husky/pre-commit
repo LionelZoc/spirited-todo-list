@@ -10,4 +10,7 @@ make test-api
 
 # Lint frontend (JS/TS)
 echo "Linting frontend (JS/TS)..."
-make lint-web 
+make lint-web
+
+echo "Running frontend (JS/TS) tests..."
+make test-web

@@ -2,47 +2,16 @@
 
 import os
 import re
-import sys
 
-from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+import pytest
 
-from main import app
 from models.task import Priority
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-# Create a single in-memory SQLite connection for all sessions
-TEST_DATABASE_URL = "sqlite://"
-test_engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-connection = test_engine.connect()
-SQLModel.metadata.create_all(connection)
+# Remove all DB, session, and client setup code
 
 
-def get_test_session():
-    """Get a test session for the database using the shared connection."""
-    with Session(bind=connection) as session:
-        yield session
-
-
-# Patch the app's dependency to use the test session
-def patch_app_session():
-    """Patch the app's dependency to use the test session."""
-    for route in app.routes:
-        if hasattr(route, "dependant"):
-            for dep in route.dependant.dependencies:
-                if getattr(dep.call, "__name__", None) == "get_session":
-                    dep.call = get_test_session
-
-
-patch_app_session()
-
-client = TestClient(app)
-
-
-def test_create_read_update_delete_task():
+@pytest.mark.usefixtures("client")
+def test_create_read_update_delete_task(client):
     """Test create, read, update, and delete task (happy path)."""
     # Create
     response = client.post(
@@ -84,14 +53,14 @@ def test_create_read_update_delete_task():
     assert response.status_code == 404
 
 
-def test_create_task_missing_title():
+def test_create_task_missing_title(client):
     """Test creating a task with missing title."""
     response = client.post("/tasks/", json={"priority": Priority.LOW.value})
     assert response.status_code == 422
     assert "title" in response.text
 
 
-def test_create_task_empty_title():
+def test_create_task_empty_title(client):
     """Test creating a task with empty title."""
     response = client.post(
         "/tasks/", json={"title": "", "priority": Priority.LOW.value}
@@ -100,21 +69,21 @@ def test_create_task_empty_title():
     assert "title" in response.text
 
 
-def test_create_task_invalid_priority():
+def test_create_task_invalid_priority(client):
     """Test creating a task with invalid priority value."""
     response = client.post("/tasks/", json={"title": "Test", "priority": "urgent"})
     assert response.status_code == 422
     assert "priority" in response.text
 
 
-def test_create_task_invalid_priority_type():
+def test_create_task_invalid_priority_type(client):
     """Test creating a task with invalid priority type."""
     response = client.post("/tasks/", json={"title": "Test", "priority": 123})
     assert response.status_code == 422
     assert "priority" in response.text
 
 
-def test_create_task_invalid_title_type():
+def test_create_task_invalid_title_type(client):
     """Test creating a task with invalid title type."""
     response = client.post(
         "/tasks/", json={"title": 123, "priority": Priority.LOW.value}
@@ -123,17 +92,17 @@ def test_create_task_invalid_title_type():
     assert "title" in response.text
 
 
-def test_create_task_malformed_json():
+def test_create_task_malformed_json(client):
     """Test creating a task with malformed JSON payload."""
     response = client.post(
         "/tasks/",
-        data="{title: 'bad json'}",
+        content="{title: 'bad json'}",
         headers={"Content-Type": "application/json"},
     )
     assert response.status_code == 422 or response.status_code == 400
 
 
-def test_update_task_invalid_priority():
+def test_update_task_invalid_priority(client):
     """Test updating a task with invalid priority value."""
     # Create a valid task
     response = client.post("/tasks/", json={"title": "ToUpdate"})
@@ -145,25 +114,25 @@ def test_update_task_invalid_priority():
     assert "priority" in response.text
 
 
-def test_get_nonexistent_task():
+def test_get_nonexistent_task(client):
     """Test getting a non-existent task."""
     response = client.get("/tasks/999999")
     assert response.status_code == 404
 
 
-def test_update_nonexistent_task():
+def test_update_nonexistent_task(client):
     """Test updating a non-existent task."""
     response = client.patch("/tasks/999999", json={"title": "Nope"})
     assert response.status_code == 404
 
 
-def test_delete_nonexistent_task():
+def test_delete_nonexistent_task(client):
     """Test deleting a non-existent task."""
     response = client.delete("/tasks/999999")
     assert response.status_code == 404
 
 
-def test_create_task_extra_fields():
+def test_create_task_extra_fields(client):
     """Test creating a task with extra fields in payload."""
     response = client.post(
         "/tasks/", json={"title": "Extra", "priority": Priority.LOW.value, "foo": "bar"}
@@ -175,7 +144,7 @@ def test_create_task_extra_fields():
     assert "foo" not in data
 
 
-def test_high_priority_task_limit():
+def test_high_priority_task_limit(client):
     """Test that creating more than MAX_HIGH_PRIORITY_TASK high priority tasks fails."""
     max_high = int(os.getenv("MAX_HIGH_PRIORITY_TASK", "5"))
     # Create up to the limit
@@ -192,7 +161,7 @@ def test_high_priority_task_limit():
     assert "high priority tasks" in response.text
 
 
-def test_task_pagination_and_sorting():
+def test_task_pagination_and_sorting(client):
     """Test pagination and sorting of tasks."""
     # Clean up all tasks first
     response = client.get("/tasks/")
@@ -260,7 +229,7 @@ def test_task_pagination_and_sorting():
     assert response.json()["items"][4]["priority"] == Priority.LOW.value
 
 
-def test_create_task_priority_out_of_range_and_type():
+def test_create_task_priority_out_of_range_and_type(client):
     """Test creating a task with out-of-range and non-integer priority values."""
     # Out of range (0, 4, -1, 999)
     for val in [0, 4, -1, 999]:
@@ -272,7 +241,7 @@ def test_create_task_priority_out_of_range_and_type():
         assert response.status_code == 422
 
 
-def test_update_task_to_high_priority_at_limit():
+def test_update_task_to_high_priority_at_limit(client):
     """Test updating a task to high priority when already at the high-priority limit."""
     # Clean up all tasks first
     response = client.get("/tasks/")
@@ -297,7 +266,7 @@ def test_update_task_to_high_priority_at_limit():
     assert "high priority tasks" in resp.text
 
 
-def test_delete_high_priority_and_create_new():
+def test_delete_high_priority_and_create_new(client):
     """Test deleting a high-priority task and then creating a new one (should succeed)."""
     # Clean up all tasks first
     response = client.get("/tasks/")
@@ -319,3 +288,26 @@ def test_delete_high_priority_and_create_new():
         "/tasks/", json={"title": "High new", "priority": Priority.HIGH.value}
     )
     assert resp.status_code == 201
+
+
+def test_invalid_limit_parameters(client):
+    """Test list endpoint with invalid limit parameters."""
+    # Test negative limit
+    response = client.get("/tasks/?limit=-1")
+    assert response.status_code == 422
+    assert "limit" in response.text.lower()
+
+    # Test zero limit
+    response = client.get("/tasks/?limit=0")
+    assert response.status_code == 422
+    assert "limit" in response.text.lower()
+
+    # Test limit above maximum
+    response = client.get("/tasks/?limit=101")
+    assert response.status_code == 422
+    assert "limit" in response.text.lower()
+
+    # Test non-numeric limit
+    response = client.get("/tasks/?limit=abc")
+    assert response.status_code == 422
+    assert "limit" in response.text.lower()

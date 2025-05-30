@@ -9,11 +9,16 @@
   "python.sortImports.args": ["--profile", "black"],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.organizeImports": true
+    "source.organizeImports": "explicit"
   },
   "isort.args": ["--profile", "black"],
   "python.envFile": "${workspaceFolder}/api/.env",
   "python.analysis.extraPaths": [
     "api"
-  ]
-} 
+    ],
+  "eslint.workingDirectories": [
+    "web"
+  ],
+  "eslint.nodePath": "web/node_modules",
+  "eslint.format.enable": true
+}
