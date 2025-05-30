@@ -1,13 +1,12 @@
 """API routes for Task operations in the Spirited Todo List API."""
 
 import os
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, create_engine
 
 from crud.task import create_task, delete_task, get_task, get_tasks, update_task
-from schemas.task import TaskCreate, TaskRead, TaskUpdate
+from schemas.task import TaskCreate, TaskListResponse, TaskRead, TaskUpdate
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/todo.db")
 engine = create_engine(DATABASE_URL, echo=True)
@@ -21,7 +20,7 @@ def get_session():
         yield session
 
 
-@router.get("/", response_model=List[TaskRead])
+@router.get("/", response_model=TaskListResponse)
 def list_tasks(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -30,8 +29,15 @@ def list_tasks(
     session: Session = Depends(get_session),
 ):
     """List all tasks with pagination and sorting."""
-    return get_tasks(
+    items, total = get_tasks(
         session, limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order
+    )
+    page = (offset // limit) + 1 if limit else 1
+    return TaskListResponse(
+        items=[TaskRead.model_validate(item.model_dump()) for item in items],
+        total=total,
+        page=page,
+        page_size=limit,
     )
 
 
