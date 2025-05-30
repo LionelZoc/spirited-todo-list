@@ -17,7 +17,6 @@ services:
     container_name: spirited-todo-web
     volumes:
       - ./web:/app
-      - ./web/node_modules:/app/node_modules
     ports:
       - "3000:3000"
     environment:
