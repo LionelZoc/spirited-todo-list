@@ -14,6 +14,7 @@ class TaskBase(BaseModel):
     title: str = Field(..., min_length=1)
     description: Optional[str] = None
     priority: Priority = Priority.LOW
+    deadline: Optional[datetime] = None
 
 
 class TaskCreate(TaskBase):
@@ -34,6 +35,7 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     priority: Optional[Priority] = None
+    deadline: Optional[datetime] = None
 
 
 class TaskListResponse(BaseModel):

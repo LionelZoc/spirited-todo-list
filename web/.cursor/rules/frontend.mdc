@@ -5,6 +5,7 @@ alwaysApply: false
 ---
 # Frontend Rules
 
+you are a senior developper in React nextjs typescript and you master react testing library and jest for unit and integrations tests .
 - Use React with TypeScript for all components.
 - Keep most types in a `types.ts` file and ensure all components are correctly typed.
 - Use `react-table` for listing and table features.

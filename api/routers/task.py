@@ -2,10 +2,11 @@
 
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session, create_engine
 
 from crud.task import create_task, delete_task, get_task, get_tasks, update_task
+from models.error import ErrorCode, error_response
 from schemas.task import TaskCreate, TaskListResponse, TaskRead, TaskUpdate
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/todo.db")
@@ -47,7 +48,7 @@ def create_new_task(task_in: TaskCreate, session: Session = Depends(get_session)
     try:
         return create_task(session, task_in)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise error_response(400, ErrorCode.HIGH_PRIORITY_LIMIT, str(e)) from e
 
 
 @router.get("/{task_id}", response_model=TaskRead)
@@ -55,7 +56,7 @@ def read_task(task_id: int, session: Session = Depends(get_session)):
     """Get a task by ID."""
     task = get_task(session, task_id)
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise error_response(404, ErrorCode.TASK_NOT_FOUND, "Task not found")
     return task
 
 
@@ -67,14 +68,14 @@ def update_existing_task(
     try:
         task = update_task(session, task_id, task_in)
         if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
+            raise error_response(404, ErrorCode.TASK_NOT_FOUND, "Task not found")
         return task
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise error_response(400, ErrorCode.HIGH_PRIORITY_LIMIT, str(e)) from e
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_existing_task(task_id: int, session: Session = Depends(get_session)):
     """Delete a task by ID."""
     if not delete_task(session, task_id):
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise error_response(404, ErrorCode.TASK_NOT_FOUND, "Task not found")

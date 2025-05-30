@@ -20,4 +20,8 @@ jobs:
       - name: Lint, format, and sort imports in API (isort, black, pylint)
         run: make lint-api-all
       - name: Run API tests
-        run: make test-api 
+        run: make test-api
+      - name: Run frontend tests
+        run: make test-web
+      - name: Run frontend lint
+        run: make lint-web
